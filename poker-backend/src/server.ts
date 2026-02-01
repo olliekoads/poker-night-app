@@ -41,6 +41,8 @@ if (process.env.NODE_ENV !== 'production') {
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:5173',
   'https://poker-night-app.vercel.app',
+  'https://poker-player-manager.vercel.app',
+  'https://pokernight.famylin.com',
   'https://edwinpokernight.com',
   'https://www.edwinpokernight.com',
   'http://localhost:5173',
