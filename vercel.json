@@ -1,5 +1,6 @@
 {
-  "buildCommand": "cd poker-player-manager && npm install && npm run build",
+  "installCommand": "cd poker-player-manager && npm install",
+  "buildCommand": "cd poker-player-manager && npm run build",
   "outputDirectory": "poker-player-manager/dist",
   "routes": [
     {
