@@ -1,14 +1,20 @@
 {
   "buildCommand": "cd poker-player-manager && npm run build",
   "outputDirectory": "poker-player-manager/dist",
+  "cleanUrls": true,
   "rewrites": [
     {
       "source": "/api/:path*",
       "destination": "https://poker-night-app-production-985f.up.railway.app/api/:path*"
+    }
+  ],
+  "routes": [
+    {
+      "handle": "filesystem"
     },
     {
-      "source": "/(.*)",
-      "destination": "/"
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
