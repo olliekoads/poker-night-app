@@ -78,7 +78,7 @@ function SessionItem({ session, onRemove, onEdit, onViewDetails, onViewSession, 
             <div className="flex-1 min-w-0">
               {/* Session Title */}
               <h3
-                className="font-semibold text-foreground dark:text-foreground leading-tight mb-2"
+                className="font-semibold text-gray-900 dark:text-white leading-tight mb-2"
                 title={session.name || 'Poker Night'}
               >
                 {session.name || 'Poker Night'}
