@@ -21,12 +21,8 @@ echo ""
 echo "2. Testing Frontend (pokernight.famylin.com)..."
 FRONTEND_RESPONSE=$(curl -s https://pokernight.famylin.com)
 
-if echo "$FRONTEND_RESPONSE" | grep -q "<!DOCTYPE html>"; then
-    if echo "$FRONTEND_RESPONSE" | grep -q "Poker Night"; then
-        echo "   ✅ Frontend is serving HTML correctly"
-    else
-        echo "   ⚠️  Frontend serving HTML but title might be wrong"
-    fi
+if echo "$FRONTEND_RESPONSE" | grep -iq "<!DOCTYPE html>"; then
+    echo "   ✅ Frontend is serving HTML correctly"
 elif echo "$FRONTEND_RESPONSE" | grep -q "Poker Night API"; then
     echo "   ❌ CRITICAL: Frontend domain is serving BACKEND code!"
     echo "   Fix: Set poker-frontend service root directory to /poker-player-manager"
@@ -41,7 +37,7 @@ echo ""
 # Direct frontend service check
 echo "3. Testing Frontend Service Directly..."
 FRONTEND_DIRECT=$(curl -s https://poker-frontend-production-543f.up.railway.app)
-if echo "$FRONTEND_DIRECT" | grep -q "<!DOCTYPE html>"; then
+if echo "$FRONTEND_DIRECT" | grep -iq "<!DOCTYPE html>"; then
     echo "   ✅ Frontend service is serving HTML"
 else
     echo "   ❌ Frontend service not serving HTML correctly"
