@@ -4,12 +4,10 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // PostgreSQL connection configuration
-// Use SSL for external connections, disable for Railway internal network
+// Railway internal network doesn't use SSL
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL?.includes('railway.internal') 
-    ? false
-    : { rejectUnauthorized: false },
+  ssl: false,
 });
 
 // Test the connection
