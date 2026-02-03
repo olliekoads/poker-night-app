@@ -271,10 +271,14 @@ router.post('/', authenticateToken, async (req: any, res: Response): Promise<voi
     MetricsService.trackSessionCreated(userId, sessionId);
 
     // Send invitation emails in background (non-blocking)
+    console.log('📧 Checking email sending...', { sessionId, playerIds, playerCount: playerIds?.length });
     if (playerIds && playerIds.length > 0) {
+      console.log('📧 Starting background email sending for session', sessionId);
       sendSessionInviteEmails(sessionId, userId).catch(err => {
         console.error('Background email sending failed:', err);
       });
+    } else {
+      console.log('📧 No players to email (playerIds empty or undefined)');
     }
 
     await fetchSessionById(sessionId, res);
@@ -657,6 +661,7 @@ router.post('/:sessionId/send-reminders', authenticateToken, requireSessionOwner
 
 // Helper function to send session invite emails
 async function sendSessionInviteEmails(sessionId: number, hostUserId: number): Promise<void> {
+  console.log('📧 sendSessionInviteEmails called for session', sessionId);
   try {
     // Get session details
     const sessionSql = `
