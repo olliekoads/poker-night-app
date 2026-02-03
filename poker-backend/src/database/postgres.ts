@@ -4,17 +4,14 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // PostgreSQL connection configuration
-// Use individual connection parameters to avoid connection string SSL issues
+// Railway only provides DATABASE_URL (no individual PG vars)
+// Use the internal URL which doesn't require SSL
+const connectionString = process.env.DATABASE_URL;
+
 const pool = new Pool({
-  host: process.env.PGHOST,
-  port: parseInt(process.env.PGPORT || '5432'),
-  user: process.env.PGUSER,
-  password: process.env.PGPASSWORD,
-  database: process.env.PGDATABASE,
-  // Railway's PostgreSQL requires SSL
-  ssl: {
-    rejectUnauthorized: false
-  }
+  connectionString,
+  // Railway internal network doesn't require SSL
+  ssl: false
 });
 
 // Test the connection
