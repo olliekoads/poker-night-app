@@ -10,8 +10,8 @@ const connectionString = process.env.DATABASE_URL;
 
 const pool = new Pool({
   connectionString,
-  // Railway internal network doesn't require SSL
-  ssl: false
+  // Use SSL for public proxy connections
+  ssl: connectionString?.includes('.proxy.rlwy.net') ? { rejectUnauthorized: false } : false
 });
 
 // Test the connection

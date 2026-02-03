@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ['nodejs-18_x']
+
+[phases.install]
+cmds = ['cd poker-backend && npm ci']
+
+[phases.build]
+cmds = ['cd poker-backend && npm run build']
+
+[start]
+cmd = 'cd poker-backend && npm start'

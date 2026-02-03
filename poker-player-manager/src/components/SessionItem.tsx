@@ -78,7 +78,7 @@ function SessionItem({ session, onRemove, onEdit, onViewDetails, onViewSession, 
             <div className="flex-1 min-w-0">
               {/* Session Title */}
               <h3
-                className="font-semibold text-foreground leading-tight mb-2"
+                className="font-semibold text-foreground dark:text-foreground leading-tight mb-2"
                 title={session.name || 'Poker Night'}
               >
                 {session.name || 'Poker Night'}
@@ -153,7 +153,7 @@ function SessionItem({ session, onRemove, onEdit, onViewDetails, onViewSession, 
                     <Badge
                       key={sessionPlayer.player_id}
                       variant="outline"
-                      className="text-xs"
+                      className="text-xs bg-background dark:bg-card dark:text-foreground dark:border-border"
                     >
                       {sessionPlayer.player?.name || 'Unknown Player'}
                     </Badge>
@@ -161,7 +161,7 @@ function SessionItem({ session, onRemove, onEdit, onViewDetails, onViewSession, 
                   {sessionPlayers.length > 4 && (
                     <Badge
                       variant="outline"
-                      className="text-xs text-gray-500"
+                      className="text-xs text-gray-500 dark:text-gray-400 bg-background dark:bg-card dark:border-border"
                     >
                       +{sessionPlayers.length - 4} more
                     </Badge>

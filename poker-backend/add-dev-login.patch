@@ -1,0 +1,46 @@
+--- a/poker-backend/src/routes/auth.ts
++++ b/poker-backend/src/routes/auth.ts
+@@ -1,6 +1,7 @@
+ import express from 'express';
+ import passport from '../config/auth';
+-import { createJWT } from '../config/auth';
++import { createJWT, findUserByEmail } from '../config/auth';
++import db from '../database/index';
+ 
+ const router = express.Router();
+ 
+@@ -50,4 +51,33 @@ router.get('/google/callback',
+   }
+ );
+ 
++// DEV-ONLY: Simple email login for testing without Google OAuth
++// This endpoint allows login with just an email if the user exists
++router.post('/dev-login', async (req, res) => {
++  try {
++    const { email } = req.body;
++    
++    if (!email) {
++      return res.status(400).json({ error: 'Email required' });
++    }
++
++    // Find user by email
++    const sql = 'SELECT * FROM users WHERE email = ?';
++    const users = await db.all(sql, [email]);
++    
++    if (!users || users.length === 0) {
++      return res.status(404).json({ error: 'User not found' });
++    }
++
++    const user = users[0];
++    const token = createJWT(user);
++
++    res.json({
++      token,
++      user: { id: user.id, email: user.email, name: user.name }
++    });
++  } catch (error: any) {
++    res.status(500).json({ error: error.message });
++  }
++});
++
+ export default router;
