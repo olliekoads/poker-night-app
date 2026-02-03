@@ -270,9 +270,11 @@ router.post('/', authenticateToken, async (req: any, res: Response): Promise<voi
     // Track session creation
     MetricsService.trackSessionCreated(userId, sessionId);
 
-    // Send invitation emails if players were added
+    // Send invitation emails in background (non-blocking)
     if (playerIds && playerIds.length > 0) {
-      await sendSessionInviteEmails(sessionId, userId);
+      sendSessionInviteEmails(sessionId, userId).catch(err => {
+        console.error('Background email sending failed:', err);
+      });
     }
 
     await fetchSessionById(sessionId, res);
@@ -491,8 +493,10 @@ router.post('/:sessionId/players/:playerId', async (req: TypedRequest<UpdatePlay
       const insertSql = 'INSERT INTO session_players (session_id, player_id, status, buy_in, cash_out) VALUES (?, ?, ?, 0, 0)';
       await db.run(insertSql, [sessionIdNum, playerIdNum, status]);
 
-      // Send invitation email to newly added player
-      await sendPlayerAddedEmail(sessionIdNum, playerIdNum);
+      // Send invitation email in background (non-blocking)
+      sendPlayerAddedEmail(sessionIdNum, playerIdNum).catch(err => {
+        console.error('Background email sending failed:', err);
+      });
 
       res.json({ message: 'Player added to session successfully', status, action: 'added' });
     }
