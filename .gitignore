@@ -75,3 +75,12 @@ Thumbs.db
 *.temp
 .vercel
 .env*.local
+
+# Security: Prevent credential leaks
+**/EMAIL-FIX-*.md
+**/DEPLOYMENT-SUCCESS-*.md
+test-email.js
+test-email-*.js
+*.credentials
+*.secrets
+generate-gmail-token.js
