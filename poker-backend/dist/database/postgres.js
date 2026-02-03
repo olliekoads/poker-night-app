@@ -7,9 +7,12 @@ exports.initializePostgresDatabase = initializePostgresDatabase;
 const pg_1 = require("pg");
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
+const connectionString = process.env.DATABASE_PUBLIC_URL || process.env.DATABASE_URL;
 const pool = new pg_1.Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: false,
+    connectionString,
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 pool.on('connect', () => {
     console.log('Connected to PostgreSQL database');

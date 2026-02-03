@@ -6,11 +6,19 @@ dotenv.config();
 // PostgreSQL connection configuration
 // Railway requires SSL for all connections
 const connectionString = process.env.DATABASE_PUBLIC_URL || process.env.DATABASE_URL;
+
+// Parse the connection string to add SSL mode if not present
+let finalConnectionString = connectionString;
+if (connectionString && !connectionString.includes('sslmode=')) {
+  const separator = connectionString.includes('?') ? '&' : '?';
+  finalConnectionString = `${connectionString}${separator}sslmode=require`;
+}
+
 const pool = new Pool({
-  connectionString,
-  ssl: {
+  connectionString: finalConnectionString,
+  ssl: process.env.NODE_ENV === 'production' ? {
     rejectUnauthorized: false
-  }
+  } : false
 });
 
 // Test the connection
