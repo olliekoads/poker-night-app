@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poker Night - Test Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .info {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .button:active {
+            transform: translateY(0);
+        }
+        .success {
+            background: #10b981;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+            font-size: 14px;
+        }
+        .code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🃏 Poker Night Test Login</h1>
+        <p class="subtitle">Temporary testing access (Google OAuth not configured yet)</p>
+        
+        <div class="info">
+            <strong>ℹ️ What this does:</strong><br>
+            This page will inject a valid JWT token into the poker app, allowing you to test all features without Google OAuth. The token is valid for 30 days and logged in as <span class="code">edwinlin1987@gmail.com</span>.
+        </div>
+
+        <button class="button" onclick="loginAndRedirect()">
+            Login as Edwin & Open App →
+        </button>
+
+        <div class="success" id="success">
+            ✅ Token saved! Redirecting to app...
+        </div>
+    </div>
+
+    <script>
+        const TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImVtYWlsIjoiZWR3aW5saW4xOTg3QGdtYWlsLmNvbSIsImlhdCI6MTc3MDA4MjExMSwiZXhwIjoxNzcyNjc0MTExfQ.pQovAUwiOpi2nOv-Qhx5m8WydFT40f1wAbT9fKNFaMA';
+        const FRONTEND_URL = 'https://poker-frontend-production-543f.up.railway.app';
+
+        function loginAndRedirect() {
+            // Open frontend in new window
+            const newWindow = window.open(FRONTEND_URL, '_blank');
+            
+            if (newWindow) {
+                // Wait a bit for the page to load, then inject token
+                setTimeout(() => {
+                    try {
+                        newWindow.localStorage.setItem('poker_token', TOKEN);
+                        newWindow.location.reload();
+                        
+                        // Show success message
+                        document.getElementById('success').style.display = 'block';
+                        setTimeout(() => {
+                            document.getElementById('success').style.display = 'none';
+                        }, 3000);
+                    } catch (e) {
+                        // Cross-origin security prevented direct access
+                        // User will need to manually paste token
+                        alert('Please paste this token in the browser console:\\n\\nlocalStorage.setItem(\"poker_token\", \"' + TOKEN + '\");\\nlocation.reload();');
+                    }
+                }, 1500);
+            } else {
+                alert('Popup blocked! Please allow popups or manually navigate to:\\n\\n' + FRONTEND_URL + '\\n\\nThen paste this in console:\\n\\nlocalStorage.setItem(\"poker_token\", \"' + TOKEN + '\");\\nlocation.reload();');
+            }
+        }
+    </script>
+</body>
+</html>
