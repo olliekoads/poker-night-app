@@ -65,8 +65,8 @@ function SessionItem({ session, onRemove, onEdit, onViewDetails, onViewSession, 
 
   return (
     <Card className={`h-full transition-all duration-200 hover:shadow-md ${
-      isActive ? 'bg-green-50 border-green-300 ring-2 ring-green-200' :
-      isPast ? 'bg-gray-50 border-gray-200' : ''
+      isActive ? 'bg-green-50 dark:bg-green-950 border-green-300 dark:border-green-700 ring-2 ring-green-200 dark:ring-green-800' :
+      isPast ? 'opacity-60' : ''
     }`}>
       <CardContent className="p-4 flex flex-col h-full">
         <div className="flex flex-col h-full">

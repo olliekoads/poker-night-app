@@ -245,7 +245,7 @@ function EditSessionModal({ open, onClose, onUpdateSession, players, session }: 
               <h4 className="text-sm font-medium mb-2">
                 Available Players ({availablePlayers.length})
               </h4>
-              <div className="border rounded-lg bg-gray-50 max-h-48 overflow-y-auto">
+              <div className="border rounded-lg bg-gray-50 dark:bg-gray-800 max-h-48 overflow-y-auto">
                 {availablePlayers.length === 0 ? (
                   <div className="p-6 text-center">
                     <p className="text-sm text-muted-foreground">
@@ -259,7 +259,7 @@ function EditSessionModal({ open, onClose, onUpdateSession, players, session }: 
                   <div className="p-2">
                     <TooltipProvider>
                       {availablePlayers.map(player => (
-                        <div key={player.id} className="flex items-center justify-between p-2 hover:bg-gray-100 rounded">
+                        <div key={player.id} className="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
                           <div className="flex items-center gap-2">
                             <User className="h-4 w-4 text-muted-foreground" />
                             <span className="text-sm">{player.name}</span>
@@ -295,7 +295,7 @@ function EditSessionModal({ open, onClose, onUpdateSession, players, session }: 
               <h4 className="text-sm font-medium mb-2">
                 Selected Players ({selectedPlayers.length})
               </h4>
-              <div className="border rounded-lg bg-blue-50 max-h-48 overflow-y-auto">
+              <div className="border rounded-lg bg-blue-50 dark:bg-blue-950 max-h-48 overflow-y-auto">
                 {selectedPlayers.length === 0 ? (
                   <div className="p-6 text-center">
                     <p className="text-sm text-muted-foreground">
@@ -305,7 +305,7 @@ function EditSessionModal({ open, onClose, onUpdateSession, players, session }: 
                 ) : (
                   <div className="p-2">
                     {selectedPlayers.map(player => (
-                      <div key={player.id} className="flex items-center justify-between p-2 hover:bg-blue-100 rounded">
+                      <div key={player.id} className="flex items-center justify-between p-2 hover:bg-blue-100 dark:hover:bg-blue-900 rounded">
                         <div className="flex items-center gap-2">
                           <User className="h-4 w-4 text-primary" />
                           <span className="text-sm">{player.name}</span>

@@ -114,7 +114,7 @@ function SessionPlayerList({
             return (
               <div
                 key={player.id}
-                className="flex items-center p-3 sm:p-6 hover:bg-gray-50 transition-colors"
+                className="flex items-center p-3 sm:p-6 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
                 <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary rounded-full flex items-center justify-center mr-2 sm:mr-4 flex-shrink-0">
                   <User className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
