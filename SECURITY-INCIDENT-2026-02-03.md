@@ -7,8 +7,10 @@
 ## Exposed Credentials
 
 Two Gmail app passwords for edwinlin1987@gmail.com were committed to git history:
-1. `aazkjucqmkiorigh` - in DEPLOYMENT-SUCCESS-2026-02-01.md, EMAIL-FIX-2026-02-01.md
-2. `hobvjnswittxfbih` - in test-email.js
+1. `[REDACTED-1]` - in DEPLOYMENT-SUCCESS-2026-02-01.md, EMAIL-FIX-2026-02-01.md
+2. `[REDACTED-2]` - in test-email.js
+
+**Status:** ✅ Both passwords revoked by Edwin on 2026-02-03 00:07 PST
 
 ## Immediate Actions Taken
 
