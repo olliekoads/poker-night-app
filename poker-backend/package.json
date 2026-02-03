@@ -15,6 +15,7 @@
     "add-game-type-and-default-invite": "ts-node src/scripts/addGameTypeAndDefaultInvite.ts",
     "migrate-production": "ts-node src/scripts/migrateProduction.ts",
     "import-historical-data": "ts-node src/scripts/importHistoricalData.ts",
+    "import-sql-data": "node import-data.js",
     "clean": "rm -rf dist",
     "postbuild": "cp -r database dist/ || mkdir -p dist/database",
     "type-check": "tsc --noEmit",
