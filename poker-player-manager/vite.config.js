@@ -17,5 +17,10 @@ export default defineConfig({
   preview: {
     // Enable client-side routing for preview builds
     historyApiFallback: true,
+    host: '0.0.0.0',
+    allowedHosts: [
+      'pokernight.famylin.com',
+      'poker-frontend-production-543f.up.railway.app'
+    ]
   },
 })
