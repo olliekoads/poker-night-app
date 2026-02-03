@@ -60,6 +60,7 @@ class EmailService {
   }
 
   public async sendSessionInviteEmail(data: SessionInviteEmailData): Promise<boolean> {
+    console.log('📧 [EmailService] sendSessionInviteEmail called for:', data.player.email);
     if (!this.isConfigured || !this.transporter) {
       console.log('Email service not configured. Skipping email send.');
       return false;
@@ -71,8 +72,10 @@ class EmailService {
     }
 
     try {
+      console.log('📧 [EmailService] Generating email HTML...');
       const emailHtml = this.generateSessionInviteHtml(data);
       const emailText = this.generateSessionInviteText(data);
+      console.log('📧 [EmailService] Email content generated, preparing to send...');
 
       // Format date for email subject
       const formatDateForSubject = (dateString: string): string => {
@@ -96,11 +99,12 @@ class EmailService {
         html: emailHtml,
       };
 
+      console.log('📧 [EmailService] Calling transporter.sendMail...');
       const result = await this.transporter.sendMail(mailOptions);
-      console.log(`Session invite email sent to ${data.player.email}:`, result.messageId);
+      console.log(`✅ Session invite email sent to ${data.player.email}:`, result.messageId);
       return true;
     } catch (error) {
-      console.error(`Failed to send session invite email to ${data.player.email}:`, error);
+      console.error(`❌ Failed to send session invite email to ${data.player.email}:`, error);
       return false;
     }
   }
@@ -111,10 +115,12 @@ class EmailService {
     hostName: string,
     baseUrl: string
   ): Promise<{ sent: number; failed: number }> {
+    console.log('📧 [EmailService] sendBulkSessionInvites called with', players.length, 'players');
     let sent = 0;
     let failed = 0;
 
     for (const player of players) {
+      console.log('📧 [EmailService] Processing player:', player.name, 'email:', player.email);
       if (!player.email) {
         console.log(`Player ${player.name} has no email address. Skipping.`);
         failed++;
@@ -124,6 +130,7 @@ class EmailService {
       // Generate invite URL with base64 encoded email
       const encodedEmail = Buffer.from(player.email).toString('base64');
       const inviteUrl = `${baseUrl}/invite/${session.id}/${encodedEmail}`;
+      console.log('📧 [EmailService] Invite URL:', inviteUrl);
 
       const emailData: SessionInviteEmailData = {
         session,
@@ -132,7 +139,9 @@ class EmailService {
         hostName,
       };
 
+      console.log('📧 [EmailService] Calling sendSessionInviteEmail...');
       const success = await this.sendSessionInviteEmail(emailData);
+      console.log('📧 [EmailService] sendSessionInviteEmail returned:', success);
       if (success) {
         sent++;
       } else {
@@ -143,6 +152,7 @@ class EmailService {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
 
+    console.log('📧 [EmailService] Bulk send complete:', { sent, failed });
     return { sent, failed };
   }
 
