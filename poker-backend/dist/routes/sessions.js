@@ -215,8 +215,15 @@ router.post('/', auth_1.authenticateToken, async (req, res) => {
             await addPlayersToSession(sessionId, playerIds);
         }
         metricsService_1.default.trackSessionCreated(userId, sessionId);
+        console.log('📧 Checking email sending...', { sessionId, playerIds, playerCount: playerIds?.length });
         if (playerIds && playerIds.length > 0) {
-            await sendSessionInviteEmails(sessionId, userId);
+            console.log('📧 Starting background email sending for session', sessionId);
+            sendSessionInviteEmails(sessionId, userId).catch(err => {
+                console.error('Background email sending failed:', err);
+            });
+        }
+        else {
+            console.log('📧 No players to email (playerIds empty or undefined)');
         }
         await fetchSessionById(sessionId, res);
     }
@@ -389,7 +396,9 @@ router.post('/:sessionId/players/:playerId', async (req, res) => {
         else {
             const insertSql = 'INSERT INTO session_players (session_id, player_id, status, buy_in, cash_out) VALUES (?, ?, ?, 0, 0)';
             await index_1.default.run(insertSql, [sessionIdNum, playerIdNum, status]);
-            await sendPlayerAddedEmail(sessionIdNum, playerIdNum);
+            sendPlayerAddedEmail(sessionIdNum, playerIdNum).catch(err => {
+                console.error('Background email sending failed:', err);
+            });
             res.json({ message: 'Player added to session successfully', status, action: 'added' });
         }
     }
@@ -522,7 +531,9 @@ router.post('/:sessionId/send-reminders', auth_1.authenticateToken, auth_1.requi
     }
 });
 async function sendSessionInviteEmails(sessionId, hostUserId) {
+    console.log('📧 sendSessionInviteEmails called for session', sessionId);
     try {
+        console.log('📧 Querying session details...');
         const sessionSql = `
       SELECT s.*, u.email as host_email, u.name as host_name
       FROM sessions s
@@ -530,10 +541,12 @@ async function sendSessionInviteEmails(sessionId, hostUserId) {
       WHERE s.id = ?
     `;
         const session = await index_1.default.get(sessionSql, [sessionId]);
+        console.log('📧 Session found:', session ? 'YES' : 'NO');
         if (!session) {
             console.error('Session not found for email sending:', sessionId);
             return;
         }
+        console.log('📧 Querying players with emails...');
         const playersSql = `
       SELECT p.id, p.name, p.email
       FROM session_players sp
@@ -541,12 +554,16 @@ async function sendSessionInviteEmails(sessionId, hostUserId) {
       WHERE sp.session_id = ? AND p.email IS NOT NULL AND p.email != ''
     `;
         const players = await index_1.default.all(playersSql, [sessionId]);
+        console.log('📧 Players with emails found:', players.length, players.map(p => ({ id: p.id, name: p.name, hasEmail: !!p.email })));
         if (players.length === 0) {
             console.log('No players with email addresses found for session:', sessionId);
             return;
         }
         const baseUrl = process.env.FRONTEND_URL || 'https://edwinpokernight.com';
+        console.log('📧 Base URL:', baseUrl);
         const hostName = session.host_name || session.host_email || 'Poker Night Host';
+        console.log('📧 Host name:', hostName);
+        console.log('📧 Calling emailService.sendBulkSessionInvites...');
         const result = await emailService_1.emailService.sendBulkSessionInvites({
             id: session.id,
             name: session.name,
@@ -555,10 +572,10 @@ async function sendSessionInviteEmails(sessionId, hostUserId) {
             created_at: session.created_at,
             game_type: session.game_type
         }, players, hostName, baseUrl);
-        console.log(`Session invite emails sent for session ${sessionId}: ${result.sent} sent, ${result.failed} failed`);
+        console.log(`✅ Session invite emails sent for session ${sessionId}: ${result.sent} sent, ${result.failed} failed`);
     }
     catch (error) {
-        console.error('Error sending session invite emails:', error);
+        console.error('❌ Error sending session invite emails:', error);
     }
 }
 async function sendPlayerAddedEmail(sessionId, playerId) {

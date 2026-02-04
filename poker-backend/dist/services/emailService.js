@@ -1,38 +1,28 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.emailService = void 0;
-const nodemailer_1 = __importDefault(require("nodemailer"));
+const resend_1 = require("resend");
 class EmailService {
     constructor() {
-        this.transporter = null;
+        this.resend = null;
         this.isConfigured = false;
-        this.initializeTransporter();
+        this.fromEmail = 'noreply@famylin.com';
+        this.initializeResend();
     }
-    initializeTransporter() {
+    initializeResend() {
         try {
-            const emailHost = process.env.EMAIL_HOST;
-            const emailPort = process.env.EMAIL_PORT;
-            const emailUser = process.env.EMAIL_USER;
-            const emailPass = process.env.EMAIL_PASS;
-            if (!emailHost || !emailPort || !emailUser || !emailPass) {
-                console.log('Email configuration not found. Email functionality will be disabled.');
+            const apiKey = process.env.RESEND_API_KEY;
+            if (!apiKey) {
+                console.log('RESEND_API_KEY not found. Email functionality will be disabled.');
                 return;
             }
-            const config = {
-                host: emailHost,
-                port: parseInt(emailPort),
-                secure: parseInt(emailPort) === 465,
-                auth: {
-                    user: emailUser,
-                    pass: emailPass,
-                },
-            };
-            this.transporter = nodemailer_1.default.createTransport(config);
+            this.resend = new resend_1.Resend(apiKey);
             this.isConfigured = true;
-            console.log('Email service initialized successfully');
+            if (process.env.EMAIL_FROM) {
+                this.fromEmail = process.env.EMAIL_FROM;
+            }
+            console.log('Email service initialized successfully with Resend');
+            console.log('From email:', this.fromEmail);
         }
         catch (error) {
             console.error('Failed to initialize email service:', error);
@@ -40,7 +30,8 @@ class EmailService {
         }
     }
     async sendSessionInviteEmail(data) {
-        if (!this.isConfigured || !this.transporter) {
+        console.log('📧 [EmailService] sendSessionInviteEmail called for:', data.player.email);
+        if (!this.isConfigured || !this.resend) {
             console.log('Email service not configured. Skipping email send.');
             return false;
         }
@@ -49,8 +40,10 @@ class EmailService {
             return false;
         }
         try {
+            console.log('📧 [EmailService] Generating email HTML...');
             const emailHtml = this.generateSessionInviteHtml(data);
             const emailText = this.generateSessionInviteText(data);
+            console.log('📧 [EmailService] Email content generated, preparing to send...');
             const formatDateForSubject = (dateString) => {
                 const date = new Date(dateString);
                 const timezone = data.session.timezone || 'America/Los_Angeles';
@@ -62,26 +55,32 @@ class EmailService {
                 });
             };
             const dateText = data.session.scheduled_datetime ? ` - ${formatDateForSubject(data.session.scheduled_datetime)}` : '';
-            const mailOptions = {
-                from: `"Poker Night" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
+            console.log('📧 [EmailService] Calling resend.emails.send...');
+            const result = await this.resend.emails.send({
+                from: `Poker Night <${this.fromEmail}>`,
                 to: data.player.email,
                 subject: `🃏 You're invited to ${data.session.name || 'Poker Night'}${dateText}`,
                 text: emailText,
                 html: emailHtml,
-            };
-            const result = await this.transporter.sendMail(mailOptions);
-            console.log(`Session invite email sent to ${data.player.email}:`, result.messageId);
+            });
+            if (result.error) {
+                console.error(`❌ Resend API error:`, result.error);
+                return false;
+            }
+            console.log(`✅ Session invite email sent to ${data.player.email}:`, result.data?.id);
             return true;
         }
         catch (error) {
-            console.error(`Failed to send session invite email to ${data.player.email}:`, error);
+            console.error(`❌ Failed to send session invite email to ${data.player.email}:`, error);
             return false;
         }
     }
     async sendBulkSessionInvites(session, players, hostName, baseUrl) {
+        console.log('📧 [EmailService] sendBulkSessionInvites called with', players.length, 'players');
         let sent = 0;
         let failed = 0;
         for (const player of players) {
+            console.log('📧 [EmailService] Processing player:', player.name, 'email:', player.email);
             if (!player.email) {
                 console.log(`Player ${player.name} has no email address. Skipping.`);
                 failed++;
@@ -89,13 +88,16 @@ class EmailService {
             }
             const encodedEmail = Buffer.from(player.email).toString('base64');
             const inviteUrl = `${baseUrl}/invite/${session.id}/${encodedEmail}`;
+            console.log('📧 [EmailService] Invite URL:', inviteUrl);
             const emailData = {
                 session,
                 player,
                 inviteUrl,
                 hostName,
             };
+            console.log('📧 [EmailService] Calling sendSessionInviteEmail...');
             const success = await this.sendSessionInviteEmail(emailData);
+            console.log('📧 [EmailService] sendSessionInviteEmail returned:', success);
             if (success) {
                 sent++;
             }
@@ -104,10 +106,11 @@ class EmailService {
             }
             await new Promise(resolve => setTimeout(resolve, 100));
         }
+        console.log('📧 [EmailService] Bulk send complete:', { sent, failed });
         return { sent, failed };
     }
     async sendSessionReminderEmail(data) {
-        if (!this.isConfigured || !this.transporter) {
+        if (!this.isConfigured || !this.resend) {
             console.log('Email service not configured. Skipping reminder email send.');
             return false;
         }
@@ -129,15 +132,18 @@ class EmailService {
                 });
             };
             const dateText = data.session.scheduled_datetime ? ` - ${formatDateForSubject(data.session.scheduled_datetime)}` : '';
-            const mailOptions = {
-                from: `"Poker Night" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
+            const result = await this.resend.emails.send({
+                from: `Poker Night <${this.fromEmail}>`,
                 to: data.player.email,
                 subject: `🔔 Reminder: Please respond to ${data.session.name || 'Poker Night'}${dateText}`,
                 text: emailText,
                 html: emailHtml,
-            };
-            const result = await this.transporter.sendMail(mailOptions);
-            console.log(`Session reminder email sent to ${data.player.email}:`, result.messageId);
+            });
+            if (result.error) {
+                console.error(`❌ Resend API error:`, result.error);
+                return false;
+            }
+            console.log(`✅ Session reminder email sent to ${data.player.email}:`, result.data?.id);
             return true;
         }
         catch (error) {

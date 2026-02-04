@@ -6,10 +6,11 @@ interface SessionInviteEmailData {
     hostName: string;
 }
 declare class EmailService {
-    private transporter;
+    private resend;
     private isConfigured;
+    private fromEmail;
     constructor();
-    private initializeTransporter;
+    private initializeResend;
     sendSessionInviteEmail(data: SessionInviteEmailData): Promise<boolean>;
     sendBulkSessionInvites(session: Session, players: Player[], hostName: string, baseUrl: string): Promise<{
         sent: number;
