@@ -1,15 +1,5 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { Session, Player } from '../types/index';
-
-interface EmailConfig {
-  host: string;
-  port: number;
-  secure: boolean;
-  auth: {
-    user: string;
-    pass: string;
-  };
-}
 
 interface SessionInviteEmailData {
   session: Session;
@@ -19,40 +9,33 @@ interface SessionInviteEmailData {
 }
 
 class EmailService {
-  private transporter: nodemailer.Transporter | null = null;
+  private resend: Resend | null = null;
   private isConfigured = false;
+  private fromEmail: string = 'noreply@famylin.com';
 
   constructor() {
-    this.initializeTransporter();
+    this.initializeResend();
   }
 
-  private initializeTransporter(): void {
+  private initializeResend(): void {
     try {
-      // Check if email configuration is available
-      const emailHost = process.env.EMAIL_HOST;
-      const emailPort = process.env.EMAIL_PORT;
-      const emailUser = process.env.EMAIL_USER;
-      const emailPass = process.env.EMAIL_PASS;
+      const apiKey = process.env.RESEND_API_KEY;
 
-      if (!emailHost || !emailPort || !emailUser || !emailPass) {
-        console.log('Email configuration not found. Email functionality will be disabled.');
+      if (!apiKey) {
+        console.log('RESEND_API_KEY not found. Email functionality will be disabled.');
         return;
       }
 
-      const config: EmailConfig = {
-        host: emailHost,
-        port: parseInt(emailPort),
-        secure: parseInt(emailPort) === 465, // true for 465, false for other ports
-        auth: {
-          user: emailUser,
-          pass: emailPass,
-        },
-      };
-
-      this.transporter = nodemailer.createTransport(config);
+      this.resend = new Resend(apiKey);
       this.isConfigured = true;
 
-      console.log('Email service initialized successfully');
+      // Use custom from email if provided
+      if (process.env.EMAIL_FROM) {
+        this.fromEmail = process.env.EMAIL_FROM;
+      }
+
+      console.log('Email service initialized successfully with Resend');
+      console.log('From email:', this.fromEmail);
     } catch (error) {
       console.error('Failed to initialize email service:', error);
       this.isConfigured = false;
@@ -61,7 +44,7 @@ class EmailService {
 
   public async sendSessionInviteEmail(data: SessionInviteEmailData): Promise<boolean> {
     console.log('📧 [EmailService] sendSessionInviteEmail called for:', data.player.email);
-    if (!this.isConfigured || !this.transporter) {
+    if (!this.isConfigured || !this.resend) {
       console.log('Email service not configured. Skipping email send.');
       return false;
     }
@@ -91,17 +74,21 @@ class EmailService {
 
       const dateText = data.session.scheduled_datetime ? ` - ${formatDateForSubject(data.session.scheduled_datetime)}` : '';
 
-      const mailOptions = {
-        from: `"Poker Night" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
+      console.log('📧 [EmailService] Calling resend.emails.send...');
+      const result = await this.resend.emails.send({
+        from: `Poker Night <${this.fromEmail}>`,
         to: data.player.email,
         subject: `🃏 You're invited to ${data.session.name || 'Poker Night'}${dateText}`,
         text: emailText,
         html: emailHtml,
-      };
+      });
 
-      console.log('📧 [EmailService] Calling transporter.sendMail...');
-      const result = await this.transporter.sendMail(mailOptions);
-      console.log(`✅ Session invite email sent to ${data.player.email}:`, result.messageId);
+      if (result.error) {
+        console.error(`❌ Resend API error:`, result.error);
+        return false;
+      }
+
+      console.log(`✅ Session invite email sent to ${data.player.email}:`, result.data?.id);
       return true;
     } catch (error) {
       console.error(`❌ Failed to send session invite email to ${data.player.email}:`, error);
@@ -157,7 +144,7 @@ class EmailService {
   }
 
   public async sendSessionReminderEmail(data: SessionInviteEmailData): Promise<boolean> {
-    if (!this.isConfigured || !this.transporter) {
+    if (!this.isConfigured || !this.resend) {
       console.log('Email service not configured. Skipping reminder email send.');
       return false;
     }
@@ -185,16 +172,20 @@ class EmailService {
 
       const dateText = data.session.scheduled_datetime ? ` - ${formatDateForSubject(data.session.scheduled_datetime)}` : '';
 
-      const mailOptions = {
-        from: `"Poker Night" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
+      const result = await this.resend.emails.send({
+        from: `Poker Night <${this.fromEmail}>`,
         to: data.player.email,
         subject: `🔔 Reminder: Please respond to ${data.session.name || 'Poker Night'}${dateText}`,
         text: emailText,
         html: emailHtml,
-      };
+      });
 
-      const result = await this.transporter.sendMail(mailOptions);
-      console.log(`Session reminder email sent to ${data.player.email}:`, result.messageId);
+      if (result.error) {
+        console.error(`❌ Resend API error:`, result.error);
+        return false;
+      }
+
+      console.log(`✅ Session reminder email sent to ${data.player.email}:`, result.data?.id);
       return true;
     } catch (error) {
       console.error(`Failed to send session reminder email to ${data.player.email}:`, error);
