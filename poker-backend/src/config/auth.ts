@@ -10,10 +10,19 @@ const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || 'YOUR_GOOGLE_CL
 const JWT_SECRET = process.env.JWT_SECRET || 'poker-night-jwt-secret-change-in-production-2024';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5175';
 
+// Email allowlist - only these emails can access the app
+const ALLOWED_EMAILS = [
+  'edwinlin1987@gmail.com',
+  'mmyung806@gmail.com',
+  'ollie@famylin.com',
+  'olliekoads@famylin.com'
+];
+
 console.log('Auth config loaded:', {
   GOOGLE_CLIENT_ID: GOOGLE_CLIENT_ID.substring(0, 20) + '...',
   hasSecret: !!GOOGLE_CLIENT_SECRET,
-  isConfigured: !GOOGLE_CLIENT_ID.includes('YOUR_GOOGLE_CLIENT_ID_HERE')
+  isConfigured: !GOOGLE_CLIENT_ID.includes('YOUR_GOOGLE_CLIENT_ID_HERE'),
+  allowedEmails: ALLOWED_EMAILS.length
 });
 
 // Configure Google OAuth Strategy (only if we have real credentials)
@@ -58,6 +67,13 @@ if (!GOOGLE_CLIENT_ID.includes('YOUR_GOOGLE_CLIENT_ID_HERE') && !GOOGLE_CLIENT_S
       return done(new Error('No email found in Google profile'), undefined);
     }
 
+    // Check if email is in the allowlist
+    if (!ALLOWED_EMAILS.includes(email)) {
+      console.error('❌ Access denied - email not in allowlist:', email);
+      return done(new Error(`Access denied: ${email} is not authorized to use this app`), undefined);
+    }
+
+    console.log('✅ Email authorized:', email);
     console.log('Looking for existing user with Google ID:', googleId);
     // Check if user already exists
     const existingUser = await findUserByGoogleId(googleId);

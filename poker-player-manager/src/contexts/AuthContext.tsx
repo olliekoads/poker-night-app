@@ -115,9 +115,15 @@ export function AuthProvider({ children }: AuthProviderProps): React.JSX.Element
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname);
     } else if (error) {
+      let errorMessage = 'Authentication failed';
+      
+      if (error === 'unauthorized_email') {
+        errorMessage = 'Access denied: Your email is not authorized to use this app. Please contact the administrator.';
+      }
+      
       setAuthState(prev => ({
         ...prev,
-        error: 'Authentication failed',
+        error: errorMessage,
         isLoading: false,
       }));
       // Clean up URL

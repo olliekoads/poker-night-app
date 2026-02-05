@@ -55,7 +55,8 @@ router.get('/google/callback',
 
       if (err) {
         console.error('OAuth authentication error:', err);
-        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}?error=auth_failed`);
+        const errorMessage = err.message?.includes('not authorized') ? 'unauthorized_email' : 'auth_failed';
+        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}?error=${errorMessage}`);
       }
 
       if (!user) {
