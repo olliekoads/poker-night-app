@@ -701,6 +701,7 @@ async function sendSessionInviteEmails(sessionId: number, hostUserId: number): P
 
     // Host name fallback
     const hostName = session.host_name || session.host_email || 'Poker Night Host';
+    const hostEmail = session.host_email || undefined;
     console.log('📧 Host name:', hostName);
 
     // Send emails
@@ -716,7 +717,8 @@ async function sendSessionInviteEmails(sessionId: number, hostUserId: number): P
       },
       players,
       hostName,
-      baseUrl
+      baseUrl,
+      hostEmail
     );
 
     console.log(`✅ Session invite emails sent for session ${sessionId}: ${result.sent} sent, ${result.failed} failed`);
@@ -756,6 +758,7 @@ async function sendPlayerAddedEmail(sessionId: number, playerId: number): Promis
 
     // Host name fallback
     const hostName = session.host_name || session.host_email || 'Poker Night Host';
+    const hostEmail = session.host_email || undefined;
 
     // Generate invite URL with base64 encoded email
     const encodedEmail = Buffer.from(player.email).toString('base64');
@@ -773,7 +776,8 @@ async function sendPlayerAddedEmail(sessionId: number, playerId: number): Promis
       },
       player,
       inviteUrl,
-      hostName
+      hostName,
+      hostEmail
     });
 
     if (success) {
@@ -823,6 +827,7 @@ async function sendSessionReminderEmails(sessionId: number, hostUserId: number):
 
     // Host name fallback
     const hostName = session.host_name || session.host_email || 'Poker Night Host';
+    const hostEmail = session.host_email || undefined;
 
     // Send reminder emails
     const result = await emailService.sendBulkSessionReminders(
@@ -836,7 +841,8 @@ async function sendSessionReminderEmails(sessionId: number, hostUserId: number):
       },
       nonResponders,
       hostName,
-      baseUrl
+      baseUrl,
+      hostEmail
     );
 
     console.log(`Session reminder emails sent for session ${sessionId}: ${result.sent} sent, ${result.failed} failed`);

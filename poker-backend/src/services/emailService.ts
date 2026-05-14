@@ -6,6 +6,7 @@ interface SessionInviteEmailData {
   player: Player;
   inviteUrl: string;
   hostName: string;
+  hostEmail?: string;
 }
 
 class EmailService {
@@ -78,7 +79,8 @@ class EmailService {
       const result = await this.resend.emails.send({
         from: `Poker Night <${this.fromEmail}>`,
         to: data.player.email,
-        subject: `🃏 You're invited to ${data.session.name || 'Poker Night'}${dateText}`,
+        subject: `Poker Night invitation: ${data.session.name || 'Upcoming game'}${dateText}`,
+        replyTo: data.hostEmail || undefined,
         text: emailText,
         html: emailHtml,
       });
@@ -100,7 +102,8 @@ class EmailService {
     session: Session,
     players: Player[],
     hostName: string,
-    baseUrl: string
+    baseUrl: string,
+    hostEmail?: string
   ): Promise<{ sent: number; failed: number }> {
     console.log('📧 [EmailService] sendBulkSessionInvites called with', players.length, 'players');
     let sent = 0;
@@ -124,6 +127,7 @@ class EmailService {
         player,
         inviteUrl,
         hostName,
+        hostEmail,
       };
 
       console.log('📧 [EmailService] Calling sendSessionInviteEmail...');
@@ -175,7 +179,8 @@ class EmailService {
       const result = await this.resend.emails.send({
         from: `Poker Night <${this.fromEmail}>`,
         to: data.player.email,
-        subject: `🔔 Reminder: Please respond to ${data.session.name || 'Poker Night'}${dateText}`,
+        subject: `Reminder: Poker Night response needed${dateText}`,
+        replyTo: data.hostEmail || undefined,
         text: emailText,
         html: emailHtml,
       });
@@ -197,7 +202,8 @@ class EmailService {
     session: Session,
     players: Player[],
     hostName: string,
-    baseUrl: string
+    baseUrl: string,
+    hostEmail?: string
   ): Promise<{ sent: number; failed: number }> {
     let sent = 0;
     let failed = 0;
@@ -218,6 +224,7 @@ class EmailService {
         player,
         inviteUrl,
         hostName,
+        hostEmail,
       };
 
       const success = await this.sendSessionReminderEmail(emailData);
@@ -235,7 +242,7 @@ class EmailService {
   }
 
   private generateSessionInviteHtml(data: SessionInviteEmailData): string {
-    const { session, player, inviteUrl, hostName } = data;
+    const { session, player, inviteUrl, hostName, hostEmail } = data;
     
     const formatDate = (dateString: string): string => {
       const date = new Date(dateString);
@@ -261,51 +268,50 @@ class EmailService {
         <title>Poker Night Invitation</title>
         <style>
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-          .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-          .session-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea; }
-          .cta-button { display: inline-block; background: #3b82f6; color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; border: 2px solid #3b82f6; }
-          .cta-button:hover { background: #2563eb; border-color: #2563eb; color: #ffffff; }
+          .header { border-bottom: 1px solid #e5e7eb; padding-bottom: 16px; margin-bottom: 24px; }
+          .content { padding: 0; }
+          .session-details { background: #f9fafb; padding: 16px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb; }
+          .cta-button { display: inline-block; background: #1f2937; color: #ffffff; padding: 12px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; margin: 16px 0; }
+          .cta-button:hover { background: #111827; color: #ffffff; }
           .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
-          .emoji { font-size: 1.2em; }
         </style>
       </head>
       <body>
         <div class="header">
-          <h1><span class="emoji">🃏</span> Poker Night Invitation</h1>
+          <h1>Poker Night Invitation</h1>
         </div>
         
         <div class="content">
           <p>Hi ${player.name},</p>
           
-          <p>${hostName} has invited you to a poker session!</p>
+          <p>${hostName} invited you to a poker session.</p>
           
           <div class="session-details">
-            <h3><span class="emoji">🎮</span> ${session.name || 'Poker Night'}</h3>
+            <h3>${session.name || 'Poker Night'}</h3>
             ${session.scheduled_datetime ? `
-              <p><strong><span class="emoji">📅</span> When:</strong> ${formatDate(session.scheduled_datetime)}</p>
+              <p><strong>When:</strong> ${formatDate(session.scheduled_datetime)}</p>
             ` : ''}
-            <p><strong><span class="emoji">${session.game_type === 'tournament' ? '🏆' : '💵'}</span> Game Type:</strong> ${session.game_type === 'tournament' ? 'Tournament' : 'Cash Game'}</p>
-            <p><strong><span class="emoji">👤</span> Host:</strong> ${hostName}</p>
+            <p><strong>Game type:</strong> ${session.game_type === 'tournament' ? 'Tournament' : 'Cash Game'}</p>
+            <p><strong>Host:</strong> ${hostName}${hostEmail ? ` (${hostEmail})` : ''}</p>
           </div>
           
-          <p>Please let us know if you can make it by clicking the button below:</p>
+          <p>Please let the host know whether you can make it:</p>
           
           <div style="text-align: center;">
             <a href="${inviteUrl}" class="cta-button">
-              <span class="emoji">✅</span> Respond to Invitation
+              Respond to invitation
             </a>
           </div>
           
-          <p>You can update your status anytime using the link above. We're looking forward to seeing you at the table!</p>
+          <p>You can also copy and paste this link into your browser:</p>
+          <p><a href="${inviteUrl}">${inviteUrl}</a></p>
           
-          <p>Best regards,<br>
-          The Poker Night Team</p>
+          <p>Thanks,<br>
+          Poker Night</p>
         </div>
         
         <div class="footer">
-          <p>This invitation was sent by ${hostName} through Poker Night.<br>
-          If you have any questions, please contact the host directly.</p>
+          <p>This invitation was sent by ${hostName} through Poker Night.</p>
         </div>
       </body>
       </html>
@@ -313,7 +319,7 @@ class EmailService {
   }
 
   private generateSessionInviteText(data: SessionInviteEmailData): string {
-    const { session, player, inviteUrl, hostName } = data;
+    const { session, player, inviteUrl, hostName, hostEmail } = data;
     
     const formatDate = (dateString: string): string => {
       const date = new Date(dateString);
@@ -331,34 +337,31 @@ class EmailService {
     };
 
     return `
-🃏 POKER NIGHT INVITATION
+POKER NIGHT INVITATION
 
 Hi ${player.name},
 
-${hostName} has invited you to a poker session!
+${hostName} invited you to a poker session.
 
 SESSION DETAILS:
-🎮 Session: ${session.name || 'Poker Night'}
-${session.scheduled_datetime ? `📅 When: ${formatDate(session.scheduled_datetime)}` : ''}
-${session.game_type === 'tournament' ? '🏆' : '💵'} Game Type: ${session.game_type === 'tournament' ? 'Tournament' : 'Cash Game'}
-👤 Host: ${hostName}
+Session: ${session.name || 'Poker Night'}
+${session.scheduled_datetime ? `When: ${formatDate(session.scheduled_datetime)}` : ''}
+Game type: ${session.game_type === 'tournament' ? 'Tournament' : 'Cash Game'}
+Host: ${hostName}${hostEmail ? ` (${hostEmail})` : ''}
 
-Please respond to this invitation by visiting:
+Please let the host know whether you can make it:
 ${inviteUrl}
 
-You can update your status anytime using the link above. We're looking forward to seeing you at the table!
-
-Best regards,
-The Poker Night Team
+Thanks,
+Poker Night
 
 ---
 This invitation was sent by ${hostName} through Poker Night.
-If you have any questions, please contact the host directly.
     `.trim();
   }
 
   private generateSessionReminderHtml(data: SessionInviteEmailData): string {
-    const { session, player, inviteUrl, hostName } = data;
+    const { session, player, inviteUrl, hostName, hostEmail } = data;
 
     const formatDate = (dateString: string): string => {
       const date = new Date(dateString);
@@ -384,55 +387,54 @@ If you have any questions, please contact the host directly.
         <title>Poker Night Reminder</title>
         <style>
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-          .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-          .session-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b; }
-          .cta-button { display: inline-block; background: #3b82f6; color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; border: 2px solid #3b82f6; }
-          .cta-button:hover { background: #2563eb; border-color: #2563eb; color: #ffffff; }
+          .header { border-bottom: 1px solid #e5e7eb; padding-bottom: 16px; margin-bottom: 24px; }
+          .content { padding: 0; }
+          .session-details { background: #f9fafb; padding: 16px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb; }
+          .cta-button { display: inline-block; background: #1f2937; color: #ffffff; padding: 12px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; margin: 16px 0; }
+          .cta-button:hover { background: #111827; color: #ffffff; }
           .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
-          .emoji { font-size: 1.2em; }
-          .reminder-notice { background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 8px; margin: 20px 0; }
+          .reminder-notice { background: #f9fafb; border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px; margin: 20px 0; }
         </style>
       </head>
       <body>
         <div class="header">
-          <h1><span class="emoji">🔔</span> Poker Night Reminder</h1>
-          <p>We haven't heard from you yet!</p>
+          <h1>Poker Night Reminder</h1>
+          <p>The host is still waiting for your response.</p>
         </div>
 
         <div class="content">
           <p>Hi ${player.name},</p>
 
           <div class="reminder-notice">
-            <p><strong><span class="emoji">⏰</span> Friendly Reminder:</strong> We're still waiting for your response to the poker session invitation from ${hostName}.</p>
+            <p><strong>Friendly reminder:</strong> ${hostName} is still waiting for your response to this poker session invitation.</p>
           </div>
 
           <div class="session-details">
-            <h3><span class="emoji">🎮</span> ${session.name || 'Poker Night'}</h3>
+            <h3>${session.name || 'Poker Night'}</h3>
             ${session.scheduled_datetime ? `
-              <p><strong><span class="emoji">📅</span> When:</strong> ${formatDate(session.scheduled_datetime)}</p>
+              <p><strong>When:</strong> ${formatDate(session.scheduled_datetime)}</p>
             ` : ''}
-            <p><strong><span class="emoji">${session.game_type === 'tournament' ? '🏆' : '💵'}</span> Game Type:</strong> ${session.game_type === 'tournament' ? 'Tournament' : 'Cash Game'}</p>
-            <p><strong><span class="emoji">👤</span> Host:</strong> ${hostName}</p>
+            <p><strong>Game type:</strong> ${session.game_type === 'tournament' ? 'Tournament' : 'Cash Game'}</p>
+            <p><strong>Host:</strong> ${hostName}${hostEmail ? ` (${hostEmail})` : ''}</p>
           </div>
 
-          <p>Please let us know if you can make it by clicking the button below. It only takes a moment!</p>
+          <p>Please let the host know whether you can make it:</p>
 
           <div style="text-align: center;">
             <a href="${inviteUrl}" class="cta-button">
-              <span class="emoji">✅</span> Respond Now
+              Respond now
             </a>
           </div>
 
-          <p>Your response helps us plan better for the session. Thanks for taking a moment to let us know!</p>
+          <p>You can also copy and paste this link into your browser:</p>
+          <p><a href="${inviteUrl}">${inviteUrl}</a></p>
 
-          <p>Best regards,<br>
-          The Poker Night Team</p>
+          <p>Thanks,<br>
+          Poker Night</p>
         </div>
 
         <div class="footer">
-          <p>This reminder was sent by ${hostName} through Poker Night.<br>
-          If you have any questions, please contact the host directly.</p>
+          <p>This reminder was sent by ${hostName} through Poker Night.</p>
         </div>
       </body>
       </html>
@@ -440,7 +442,7 @@ If you have any questions, please contact the host directly.
   }
 
   private generateSessionReminderText(data: SessionInviteEmailData): string {
-    const { session, player, inviteUrl, hostName } = data;
+    const { session, player, inviteUrl, hostName, hostEmail } = data;
 
     const formatDate = (dateString: string): string => {
       const date = new Date(dateString);
@@ -458,29 +460,26 @@ If you have any questions, please contact the host directly.
     };
 
     return `
-🔔 POKER NIGHT REMINDER
+POKER NIGHT REMINDER
 
 Hi ${player.name},
 
-⏰ FRIENDLY REMINDER: We're still waiting for your response to the poker session invitation from ${hostName}.
+Friendly reminder: ${hostName} is still waiting for your response to this poker session invitation.
 
 SESSION DETAILS:
-🎮 Session: ${session.name || 'Poker Night'}
-${session.scheduled_datetime ? `📅 When: ${formatDate(session.scheduled_datetime)}` : ''}
-${session.game_type === 'tournament' ? '🏆' : '💵'} Game Type: ${session.game_type === 'tournament' ? 'Tournament' : 'Cash Game'}
-👤 Host: ${hostName}
+Session: ${session.name || 'Poker Night'}
+${session.scheduled_datetime ? `When: ${formatDate(session.scheduled_datetime)}` : ''}
+Game type: ${session.game_type === 'tournament' ? 'Tournament' : 'Cash Game'}
+Host: ${hostName}${hostEmail ? ` (${hostEmail})` : ''}
 
-Please respond to this invitation by visiting:
+Please let the host know whether you can make it:
 ${inviteUrl}
 
-Your response helps us plan better for the session. Thanks for taking a moment to let us know!
-
-Best regards,
-The Poker Night Team
+Thanks,
+Poker Night
 
 ---
 This reminder was sent by ${hostName} through Poker Night.
-If you have any questions, please contact the host directly.
     `.trim();
   }
 
