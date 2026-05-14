@@ -393,7 +393,7 @@ function InvitePage(): React.JSX.Element {
                             <User className="h-4 w-4 text-primary-foreground" />
                           </div>
                           <div>
-                            <div className="font-medium text-foreground">
+                            <div className="font-medium" style={{ color: '#111827' }}>
                               {sessionPlayer.player?.name || 'Unknown Player'}
                             </div>
                           </div>
