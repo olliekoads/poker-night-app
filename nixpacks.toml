@@ -2,10 +2,10 @@
 nixPkgs = ['nodejs-18_x']
 
 [phases.install]
-cmds = ['cd poker-backend && npm ci']
+cmds = ['npm ci']
 
 [phases.build]
-cmds = ['cd poker-backend && npm run build']
+cmds = ['npm run build']
 
 [start]
-cmd = 'cd poker-backend && npm start'
+cmd = 'npx serve -s dist -l $PORT'
